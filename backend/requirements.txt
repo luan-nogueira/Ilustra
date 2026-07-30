@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic
+requests
+python-multipart
+python-dotenv==1.0.0
+cloudconvert==2.1.0
+google-generativeai

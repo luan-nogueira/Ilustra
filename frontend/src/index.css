@@ -1,0 +1,62 @@
+@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(15, 98, 254, 0.3);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(15, 98, 254, 0.6);
+  }
+}
+
+/* Fix Leaflet z-index issues */
+.leaflet-pane {
+  z-index: 1;
+}
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 100;
+}
+
+/* Leaflet controls — tema azul corporate */
+.leaflet-control-zoom a {
+  background: rgba(255,255,255,0.95) !important;
+  color: #0F62FE !important;
+  border-color: rgba(0,0,0,0.15) !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+.leaflet-control-zoom a:hover {
+  background: #f0f7ff !important;
+  color: #0043ce !important;
+}
+.leaflet-bar {
+  border: 1px solid rgba(0,0,0,0.12) !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.25) !important;
+}
+

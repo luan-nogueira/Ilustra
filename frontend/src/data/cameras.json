@@ -1,0 +1,178 @@
+[
+  {
+    "model": "Illustra Essentials Gen4 Mini Dome",
+    "resolution": "1920x1080",
+    "fps": 30,
+    "compression": "H.265, H.264, MJPEG",
+    "fov": 110,
+    "range": 25
+  },
+  {
+    "model": "Illustra Essentials Gen4 Varifocal Bullet",
+    "resolution": "1920x1080",
+    "fps": 30,
+    "compression": "H.265, H.264, MJPEG",
+    "fov": 100,
+    "range": 30
+  },
+  {
+    "model": "Illustra Essentials Gen4 Varifocal Mini Dome",
+    "resolution": "1920x1080",
+    "fps": 30,
+    "compression": "H.265, H.264, MJPEG",
+    "fov": 100,
+    "range": 30
+  },
+  {
+    "model": "Illustra Flex Gen4 Bullet",
+    "resolution": "1920x1080",
+    "fps": 50,
+    "compression": "H.264, H.265, MJPEG",
+    "fov": 90,
+    "range": 50
+  },
+  {
+    "model": "Illustra Flex Gen4 Compact Dome",
+    "resolution": "1920x1080",
+    "fps": 50,
+    "compression": "H.264, H.265, MJPEG",
+    "fov": 74,
+    "range": 20
+  },
+  {
+    "model": "Illustra Flex Gen4 Dual Sensor",
+    "resolution": "2560x1920",
+    "fps": 50,
+    "compression": "H.264, H.265, MJPEG",
+    "fov": 355,
+    "range": 10
+  },
+  {
+    "model": "Illustra Flex Gen4 Indoor MiniDome",
+    "resolution": "1920x1080",
+    "fps": 50,
+    "compression": "H.264, H.265, MJPEG",
+    "fov": 350,
+    "range": 11
+  },
+  {
+    "model": "Illustra Flex Multisensor",
+    "resolution": "2560x1440",
+    "fps": 30,
+    "compression": "H.264, MJPEG",
+    "fov": 90,
+    "range": 192
+  },
+  {
+    "model": "Illustra IQ Pro Gen4 Corner",
+    "resolution": "2560x1920",
+    "fps": 25,
+    "compression": "H.264, H.265",
+    "fov": 132,
+    "range": 10
+  },
+  {
+    "model": "Illustra IQ Pro Gen4 LPR",
+    "resolution": "2560x1440",
+    "fps": 25,
+    "compression": "H.264, H.265",
+    "fov": 55,
+    "range": 15
+  },
+  {
+    "model": "Illustra Multisensor Fixed",
+    "resolution": "2560x1920",
+    "fps": 25,
+    "compression": "H.264, H.265, MJPEG",
+    "fov": 180,
+    "range": 20
+  },
+  {
+    "model": "Illustra Multisensor Varifocal",
+    "resolution": "2560x1920",
+    "fps": 25,
+    "compression": "H.264, H.265, MJPEG",
+    "fov": 180,
+    "range": 30
+  },
+  {
+    "model": "Illustra Panoramic Camera",
+    "resolution": "5952x2432",
+    "fps": 30,
+    "compression": "H.264, H.265, MJPEG",
+    "fov": 188,
+    "range": 47
+  },
+  {
+    "model": "Illustra Pro Gen4 Bullet",
+    "resolution": "1920x1080",
+    "fps": 50,
+    "compression": "H.264, H.265",
+    "fov": 55,
+    "range": 47
+  },
+  {
+    "model": "Illustra Pro Gen4 Compact Minidome",
+    "resolution": "1920x1080",
+    "fps": 50,
+    "compression": "H.264, H.265",
+    "fov": 105,
+    "range": 30
+  },
+  {
+    "model": "Illustra Pro Gen4 Fisheye",
+    "resolution": "2992x2992",
+    "fps": 30,
+    "compression": "H.264, H.265, MJPEG",
+    "fov": 180,
+    "range": 12
+  },
+  {
+    "model": "Illustra Pro Gen4 Indoor PTZ",
+    "resolution": "1920x1080",
+    "fps": 60,
+    "compression": "H.264, H.265, MJPEG",
+    "fov": 700,
+    "range": 135
+  },
+  {
+    "model": "Illustra Pro Gen4 Mini Dome",
+    "resolution": "1920x1080",
+    "fps": 60,
+    "compression": "H.264, H.265, MJPEG",
+    "fov": 90,
+    "range": 22
+  },
+  {
+    "model": "Illustra Pro Gen4 Multisensor",
+    "resolution": "2560x1920",
+    "fps": 30,
+    "compression": "H.264, H.265, MJPEG",
+    "fov": 40,
+    "range": 20
+  },
+  {
+    "model": "Illustra Pro Gen4 Outdoor PTZ",
+    "resolution": "1920x1080",
+    "fps": 60,
+    "compression": "H.264, H.265, MJPEG",
+    "fov": 700,
+    "range": 200
+  },
+  {
+    "model": "Illustra PG4 Multisensor",
+    "resolution": "2560x1920",
+    "fps": 30,
+    "compression": "H.264, H.265, MJPEG",
+    "fov": 90,
+    "range": 20
+  },
+  {
+    "model": "Illustra Product Guide",
+    "resolution": "1920x1080",
+    "fps": 4,
+    "compression": "H.265, H.264",
+    "fov": 360,
+    "range": 22
+  }
+]
