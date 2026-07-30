@@ -1,7 +1,14 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useProjectStore, WallSegment, SceneObject } from '../../store/useProjectStore';
-import { calculateDORIZones } from '../../utils/cameraMath';
+import { StorageCalculator } from '../Calculator/StorageCalculator';
+import { calculateDORIZones, calculateFOV } from '../../utils/cameraMath';
+import { exportProjectToPDF } from '../../utils/exportPdf';
+import { CAMERA_CATALOG } from '../Dashboard/CatalogModal';
 import { v4 as uuidv4 } from 'uuid';
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const FloorPlan3D = lazy(() => import('../Map/FloorPlan3D'));
 
@@ -1407,7 +1414,7 @@ const FloorPlanEditor: React.FC = () => {
     sideBar: { background:'#0f172a', display:'flex', flexDirection:'column' as const, flexShrink:0 },
     toolBtn: {
       width:52, height:52, borderRadius:12,
-      display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
+      display:'flex', flexDirection:'column' as const, alignItems:'center', justifyContent:'center', gap:2,
       cursor:'pointer', transition:'all 0.15s', fontSize:16, border: '1.5px solid transparent'
     },
     btnView: (active:boolean): React.CSSProperties => ({
@@ -1745,7 +1752,7 @@ const FloorPlanEditor: React.FC = () => {
             <div style={{ color:'#f1f5f9', fontWeight:700, fontSize:15, marginBottom:4 }}>Modelo de Câmera</div>
             <div style={{ color:'#475569', fontSize:12, marginBottom:16 }}>Posição: ({pendingPos?.x.toFixed(2)}m, {pendingPos?.y.toFixed(2)}m)</div>
             <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: 4, marginBottom: 12 }}>
-              {CAMERA_CATALOG.map(cam => {
+              {CAMERA_CATALOG.map((cam: any) => {
                 const c = CAM_COLORS[cam.model] ?? '#0ea5e9';
                 const modelLower = cam.model.toLowerCase();
                 const type = (modelLower.includes('flex') || modelLower.includes('dome') || modelLower.includes('fisheye')) ? 'dome' : 

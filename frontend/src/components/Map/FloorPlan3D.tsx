@@ -451,9 +451,7 @@ const Camera3D: React.FC<{ obj: SceneObject; walls: WallSegment[] } & FloorPlan3
 
       {/* ── Wireframe Edges ── */}
       <lineSegments rotation={[-Math.PI / 2, 0, 0]}>
-        <edgesGeometry thresholdAngle={20}>
-          <extrudeGeometry attach="geometry" args={[shape, { depth: obj.position[1], bevelEnabled: false }]} />
-        </edgesGeometry>
+        <edgesGeometry args={[new THREE.ExtrudeGeometry(shape, { depth: obj.position[1], bevelEnabled: false }), 20]} />
         <lineBasicMaterial color={color} transparent opacity={0.85} />
       </lineSegments>
     </>
@@ -561,7 +559,7 @@ function CameraPerspectiveManager({ activeCamId, cameras }: { activeCamId: strin
 // ── Scene ──────────────────────────────────────────────────────────────────────
 const Scene3D: React.FC<{
   presentationMode: boolean;
-  tool: string;
+  tool?: string;
   onFloorClick?: (x: number, z: number) => void;
   onObjectClick?: (type: 'wall' | 'obj', id: string) => void;
 }> = ({ presentationMode, tool, onFloorClick, onObjectClick }) => {

@@ -101,7 +101,7 @@ export const Editor3DPanel = () => {
                 >
                   <div
                     className="w-3 h-3 rounded-full flex-shrink-0 ring-2 ring-offset-1"
-                    style={{ background: CAM_COLOR_MAP[cam.model] ?? '#00d2ff', ringColor: CAM_COLOR_MAP[cam.model] ?? '#00d2ff' }}
+                    style={{ background: CAM_COLOR_MAP[cam.model] ?? '#00d2ff' }}
                   />
                   <div className="min-w-0">
                     <div className="text-[11px] font-semibold text-gray-800 truncate">{cam.model}</div>
