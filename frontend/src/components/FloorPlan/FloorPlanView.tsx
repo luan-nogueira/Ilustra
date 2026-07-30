@@ -1,7 +1,11 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useProjectStore, type CameraDevice } from '../../store/useProjectStore';
-import { FloorPlan3D } from '../Map/FloorPlan3D';
+import FloorPlan3D from '../Map/FloorPlan3D';
 import { Editor3DPanel } from '../Map/Editor3DPanel';
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 // ── Canvas rendering ──────────────────────────────────────────────
 
