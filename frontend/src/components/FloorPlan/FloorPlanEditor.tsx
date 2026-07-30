@@ -1,14 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useProjectStore, WallSegment, SceneObject } from '../../store/useProjectStore';
-import { StorageCalculator } from '../Calculator/StorageCalculator';
-import { calculateDORIZones, calculateFOV } from '../../utils/cameraMath';
-import { exportProjectToPDF } from '../../utils/exportPdf';
-import { CAMERA_CATALOG } from '../Dashboard/CatalogModal';
+import { calculateDORIZones } from '../../utils/cameraMath';
 import { v4 as uuidv4 } from 'uuid';
-import * as pdfjsLib from 'pdfjs-dist';
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const FloorPlan3D = lazy(() => import('../Map/FloorPlan3D'));
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useProjectStore, CameraDevice } from '../../store/useProjectStore';
+import { useProjectStore, type CameraDevice } from '../../store/useProjectStore';
 
 interface Props {
   device: CameraDevice;
