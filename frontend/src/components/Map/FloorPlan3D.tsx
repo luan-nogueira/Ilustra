@@ -3,6 +3,7 @@ import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, Grid, Environment, Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import { useProjectStore, WallSegment, SceneObject } from '../../store/useProjectStore';
+import { calculateDORIZones } from '../../utils/cameraMath';
 
 // ── Furniture dimensions [w, h, d] in meters ─────────────────────────────────
 const FURN_DIMS: Record<string, [number, number, number]> = {
@@ -15,7 +16,29 @@ const FURN_DIMS: Record<string, [number, number, number]> = {
   reader: [0.2,  0.25, 0.05],
   controller: [0.5, 0.6, 0.15],
   door: [0.9, 2.1, 0.1],
+  rack: [0.6, 2.0, 0.9],
+  door_heavy: [1.2, 2.2, 0.15],
+  door_sliding: [1.6, 2.1, 0.08],
+  door_auto: [1.6, 2.2, 0.12],
+  car: [4.5, 1.5, 1.8],
 };
+
+const DOOR_TYPES_3D = new Set(['door', 'door_heavy', 'door_sliding', 'door_auto']);
+
+function createPlateTexture(text: string): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256; canvas.height = 64;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#f8fafc'; ctx.fillRect(0, 0, 256, 64);
+  ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 5; ctx.strokeRect(4, 4, 248, 56);
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 34px monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text || '---', 128, 34);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
+}
 
 // ── Ray casting – Visibility Polygon ────────────────────────────────────────
 
@@ -158,7 +181,7 @@ const WallBase: React.FC<{ wall: WallSegment }> = ({ wall }) => {
 };
 
 // ── Furniture ─────────────────────────────────────────────────────────────────
-const Furniture3D: React.FC<{ obj: SceneObject } & FloorPlan3DProps> = ({ obj, tool, onObjectClick }) => {
+const Furniture3D: React.FC<{ obj: SceneObject; plateRead?: boolean } & FloorPlan3DProps> = ({ obj, tool, onObjectClick, plateRead }) => {
   const { selectedSceneObjectId, setSelectedSceneObjectId, setSelectedWallId, updateSceneObject } = useProjectStore();
   const selected = selectedSceneObjectId === obj.id;
   const groupRef = React.useRef<THREE.Group>(null);
@@ -232,6 +255,30 @@ const Furniture3D: React.FC<{ obj: SceneObject } & FloorPlan3DProps> = ({ obj, t
       </mesh>
     );
   }
+  if (obj.type === 'rack') {
+    return (
+      <group ref={groupRef} position={[obj.position[0], h / 2, obj.position[2]]} rotation={[0, obj.rotation[1], 0]} scale={[sw, 1, sd]} {...interact}>
+        <mesh castShadow receiveShadow>
+          <boxGeometry args={[w, h, d]} />
+          <meshStandardMaterial color="#111827" roughness={0.5} metalness={0.4} emissive={selected ? "#2563eb" : "#000"} emissiveIntensity={selected ? 0.25 : 0} />
+        </mesh>
+        <mesh position={[0, 0, d / 2 + 0.005]}>
+          <planeGeometry args={[w - 0.04, h - 0.04]} />
+          <meshStandardMaterial color="#1f2937" roughness={0.6} metalness={0.3} />
+        </mesh>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <mesh key={i} position={[0, h / 2 - 0.12 - i * (h / 9), d / 2 + 0.008]}>
+            <planeGeometry args={[w - 0.1, 0.025]} />
+            <meshStandardMaterial color="#374151" />
+          </mesh>
+        ))}
+        <mesh position={[w / 2 - 0.05, h / 2 - 0.08, d / 2 + 0.01]}>
+          <sphereGeometry args={[0.02, 8, 8]} />
+          <meshStandardMaterial color="#22c55e" emissive="#22c55e" emissiveIntensity={2} />
+        </mesh>
+      </group>
+    );
+  }
   if (obj.type === 'person') {
     const hScale = obj.scale?.[1] ?? 1.0;
     const pH = hScale * 1.75;
@@ -294,6 +341,80 @@ const Furniture3D: React.FC<{ obj: SceneObject } & FloorPlan3DProps> = ({ obj, t
     );
   }
 
+  if (obj.type === 'door_heavy' || obj.type === 'door_sliding' || obj.type === 'door_auto') {
+    const leafColor = obj.type === 'door_heavy' ? '#334155' : obj.type === 'door_sliding' ? '#0e7490' : '#7c3aed';
+    return (
+      <group ref={groupRef} position={[obj.position[0], 0, obj.position[2]]} rotation={[0, obj.rotation[1], 0]} {...interact}>
+        <mesh position={[0, h / 2, 0]} castShadow receiveShadow>
+          <boxGeometry args={[w, h, d]} />
+          <meshStandardMaterial color={leafColor} roughness={0.4} metalness={obj.type === 'door_heavy' ? 0.7 : 0.3} emissive={selected ? "#2563eb" : "#000"} emissiveIntensity={selected ? 0.2 : 0} />
+        </mesh>
+        {obj.type === 'door_auto' && (
+          <mesh position={[0, h + 0.08, 0]} castShadow>
+            <boxGeometry args={[w + 0.1, 0.16, d + 0.05]} />
+            <meshStandardMaterial color="#1e293b" roughness={0.5} metalness={0.5} />
+          </mesh>
+        )}
+        {obj.type === 'door_sliding' && (
+          <mesh position={[0, h + 0.04, 0]} castShadow>
+            <boxGeometry args={[w * 1.6, 0.06, d + 0.02]} />
+            <meshStandardMaterial color="#334155" roughness={0.4} metalness={0.6} />
+          </mesh>
+        )}
+        {obj.type === 'door_heavy' && [-1, 1].map(sx => (
+          <mesh key={sx} position={[sx * w * 0.3, h * 0.5, d / 2 + 0.01]} castShadow>
+            <cylinderGeometry args={[0.02, 0.02, 0.15, 8]} />
+            <meshStandardMaterial color="#94a3b8" metalness={0.9} roughness={0.2} />
+          </mesh>
+        ))}
+      </group>
+    );
+  }
+
+  if (obj.type === 'car') {
+    const carW = w, carH = h, carD = d;
+    const wheelR = 0.28, wheelW = 0.18;
+    const plateTex = createPlateTexture(obj.plate ?? '---');
+    const ringColor = plateRead ? '#22c55e' : '#64748b';
+    return (
+      <group ref={groupRef} position={[obj.position[0], 0, obj.position[2]]} rotation={[0, obj.rotation[1], 0]} {...interact}>
+        <group position={[0, carH / 2 + wheelR, 0]} castShadow>
+          <mesh position={[0, -carH * 0.25, 0]} castShadow receiveShadow>
+            <boxGeometry args={[carW, carH * 0.4, carD]} />
+            <meshStandardMaterial color={obj.color ?? '#334155'} roughness={0.3} metalness={0.6} emissive={selected ? "#2563eb" : "#000"} emissiveIntensity={selected ? 0.2 : 0} />
+          </mesh>
+          <mesh position={[-carW * 0.1, carH * 0.15, 0]} castShadow receiveShadow>
+            <boxGeometry args={[carW * 0.5, carH * 0.4, carD * 0.9]} />
+            <meshStandardMaterial color={obj.color ?? '#334155'} roughness={0.3} metalness={0.6} />
+          </mesh>
+          <mesh position={[-carW * 0.1, carH * 0.15, 0]}>
+            <boxGeometry args={[carW * 0.51, carH * 0.38, carD * 0.91]} />
+            <meshStandardMaterial color="#0f172a" roughness={0.1} metalness={0.9} transparent opacity={0.8} />
+          </mesh>
+          {[[carW * 0.3, carD * 0.45], [carW * 0.3, -carD * 0.45], [-carW * 0.35, carD * 0.45], [-carW * 0.35, -carD * 0.45]].map(([x, z], i) => (
+            <mesh key={i} position={[x, -carH / 2, z]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+              <cylinderGeometry args={[wheelR, wheelR, wheelW, 16]} />
+              <meshStandardMaterial color="#1e293b" roughness={0.9} />
+            </mesh>
+          ))}
+          {/* License plates – procedurally generated texture (no third-party assets) */}
+          <mesh position={[carW / 2 + 0.01, -carH * 0.3, 0]}>
+            <planeGeometry args={[0.4, 0.15]} />
+            <meshStandardMaterial map={plateTex} />
+          </mesh>
+          <mesh position={[-carW / 2 - 0.01, -carH * 0.3, 0]} rotation={[0, Math.PI, 0]}>
+            <planeGeometry args={[0.4, 0.15]} />
+            <meshStandardMaterial map={plateTex} />
+          </mesh>
+        </group>
+        {/* LPR read indicator ring on the ground */}
+        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
+          <ringGeometry args={[carW * 0.35, carW * 0.42, 32]} />
+          <meshBasicMaterial color={ringColor} transparent opacity={plateRead ? 0.9 : 0.25} depthWrite={false} />
+        </mesh>
+      </group>
+    );
+  }
 
   return (
       <group ref={groupRef} position={[obj.position[0], 0, obj.position[2]]} rotation={[0, obj.rotation[1], 0]} {...interact}>
@@ -417,6 +538,7 @@ const Camera3D: React.FC<{ obj: SceneObject; walls: WallSegment[] } & FloorPlan3
         </mesh>
         
         <group rotation={[0, obj.rotation[1], 0]}>
+        <group rotation={[-THREE.MathUtils.degToRad(obj.tilt ?? 15), 0, 0]}>
         <mesh position={[0, 0.22, 0]} castShadow>
           <cylinderGeometry args={[0.035, 0.035, 0.44, 10]} />
           <meshStandardMaterial color="#1a1a1a" metalness={0.8} roughness={0.2} />
@@ -443,6 +565,7 @@ const Camera3D: React.FC<{ obj: SceneObject; walls: WallSegment[] } & FloorPlan3
             {label}
           </Text>
         </Billboard>
+      </group>
       </group>
       </group>
 
@@ -542,9 +665,10 @@ function CameraPerspectiveManager({ activeCamId, cameras }: { activeCamId: strin
 
     camera.position.set(camObj.position[0], camObj.position[1] - 0.1, camObj.position[2]);
     const r = camObj.rotation[1];
+    const tiltRad = THREE.MathUtils.degToRad(camObj.tilt ?? 15);
     const target = new THREE.Vector3(
       camObj.position[0] - Math.sin(r),
-      camObj.position[1] - 0.3, // slight downward tilt
+      camObj.position[1] - Math.tan(tiltRad), // follow the configured installation tilt
       camObj.position[2] - Math.cos(r)
     );
     
@@ -566,8 +690,8 @@ const Scene3D: React.FC<{
   const { walls, sceneObjects, setSelectedWallId, setSelectedSceneObjectId, activeCameraViewId } = useProjectStore();
 
   const allWalls = useMemo(() => {
-    const doorWalls: WallSegment[] = sceneObjects.filter(f => f.type === 'door').map(d => {
-      const [bw] = [0.9, 0.15];
+    const doorWalls: WallSegment[] = sceneObjects.filter(f => DOOR_TYPES_3D.has(f.type)).map(d => {
+      const [bw] = FURN_DIMS[d.type] ?? [0.9, 0.15];
       const w = bw * d.scale[0];
       const r = d.rotation[1];
       const dx = Math.cos(r) * (w / 2);
@@ -638,7 +762,28 @@ const Scene3D: React.FC<{
 
       {walls.map(w => <Wall3D key={w.id} wall={w} tool={tool} onObjectClick={onObjectClick} />)}
       {walls.map(wall => <WallBase key={`b_${wall.id}`} wall={wall} />)}
-      {furniture.filter(o => o.type !== 'person').map(o => <Furniture3D key={o.id} obj={o} tool={tool} onObjectClick={onObjectClick} />)}
+      {furniture.filter(o => o.type !== 'person' && o.type !== 'car').map(o => <Furniture3D key={o.id} obj={o} tool={tool} onObjectClick={onObjectClick} />)}
+      {furniture.filter(o => o.type === 'car').map(o => {
+        const r1ToCanvas = (r1: number) => -r1 - Math.PI / 2;
+        const lprCams = cameras.filter(c => (c.model ?? '').toUpperCase().includes('LPR'));
+        const isPlateRead = lprCams.some(cam => {
+          const f = cam.focalLength ?? 2.8;
+          const sw = cam.sensorWidth ?? 5.27;
+          const rw = parseInt((cam.resolution ?? '1920x1080').split('x')[0]) || 1920;
+          const identifyRange = Math.min(cam.range ?? 30, calculateDORIZones(rw, f, sw).identify);
+          const halfFov = (cam.fov ?? 55) / 2 * Math.PI / 180;
+          const poly = computeVisibilityPoly(cam.position[0], cam.position[2], r1ToCanvas(cam.rotation[1]), halfFov, identifyRange, allWalls, 60);
+          const px = o.position[0], py = o.position[2];
+          let inside = false;
+          const n = poly.length;
+          for (let i = 0, j = n - 1; i < n; j = i++) {
+            const [xi, yi] = poly[i], [xj, yj] = poly[j];
+            if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
+          }
+          return inside;
+        });
+        return <Furniture3D key={o.id} obj={o} tool={tool} onObjectClick={onObjectClick} plateRead={isPlateRead} />;
+      })}
       {furniture.filter(o => o.type === 'person').map(o => {
         const r1ToCanvas = (r1: number) => -r1 - Math.PI / 2;
         const isDetected = cameras.some(cam => {

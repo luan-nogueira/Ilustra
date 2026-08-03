@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type SceneObjectType = 'wall' | 'column' | 'bed' | 'sofa' | 'chair' | 'table' | 'camera' | 'person' | 'car' | 'reader' | 'controller' | 'door';
+export type SceneObjectType = 'wall' | 'column' | 'bed' | 'sofa' | 'chair' | 'table' | 'camera' | 'person' | 'car' | 'reader' | 'controller' | 'door' | 'rack' | 'door_heavy' | 'door_sliding' | 'door_auto';
 
 export interface SceneObject {
   id: string;
@@ -15,6 +15,8 @@ export interface SceneObject {
   sensorWidth?: number; // mm
   resolution?: string; // MP
   model?: string;
+  tilt?: number; // Vertical inclination in degrees (0 = horizontal, 90 = straight down). Cameras only.
+  plate?: string; // License plate text. Cars only.
 }
 
 export interface WallSegment {

@@ -12,6 +12,9 @@ export default defineConfig({
       devOptions: {
         enabled: true // Habilita o PWA mesmo rodando em localhost durante o demo
       },
+      workbox: {
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024, // bundle inclui three.js/pdfjs, acima do limite padrão de 2MiB
+      },
       manifest: {
         name: 'CCURE Site Designer',
         short_name: 'SiteDesigner',

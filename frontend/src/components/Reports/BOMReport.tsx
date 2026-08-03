@@ -37,6 +37,7 @@ export const BOMReport: React.FC = () => {
     if (model.includes('4MP')) price = 750;
     if (model.includes('8MP') || model.includes('4K')) price = 1200;
     if (model.includes('Radar')) price = 2800;
+    if (model.toUpperCase().includes('LPR')) price = 1650;
 
     items.push({
       id: `cam-${idx}`,
@@ -80,21 +81,62 @@ export const BOMReport: React.FC = () => {
   }
 
   const doors = sceneObjects.filter(o => o.type === 'door');
+  const doorsHeavy = sceneObjects.filter(o => o.type === 'door_heavy');
+  const doorsSliding = sceneObjects.filter(o => o.type === 'door_sliding');
+  const doorsAuto = sceneObjects.filter(o => o.type === 'door_auto');
+  const allDoors = [...doors, ...doorsHeavy, ...doorsSliding, ...doorsAuto];
+
   if (doors.length > 0) {
     items.push({
       id: 'lock-1',
       category: 'Controle de Acesso',
-      code: 'ACC-LCK-280',
-      name: 'Fechadura Eletroímã 280kgf + Botoeira No-Touch',
-      description: 'Kit de fechadura eletromagnética de alta segurança para portas técnicas',
+      code: 'ACC-LCK-180',
+      name: 'Fechadura Eletroímã 180kgf + Botoeira No-Touch',
+      description: 'Kit de fechadura eletromagnética padrão para portas internas',
       unit: 'Conjunto',
       quantity: doors.length,
       unitPriceUSD: 180,
     });
   }
+  if (doorsHeavy.length > 0) {
+    items.push({
+      id: 'lock-2',
+      category: 'Controle de Acesso',
+      code: 'ACC-LCK-600',
+      name: 'Fechadura Eletroímã 600kgf de Alta Segurança',
+      description: 'Kit de fechadura eletromagnética reforçada para portas corta-fogo / blindadas',
+      unit: 'Conjunto',
+      quantity: doorsHeavy.length,
+      unitPriceUSD: 340,
+    });
+  }
+  if (doorsSliding.length > 0) {
+    items.push({
+      id: 'lock-3',
+      category: 'Controle de Acesso',
+      code: 'ACC-MTR-SLD',
+      name: 'Kit Motor para Porta Corrediça + Controladora',
+      description: 'Motorização e trava eletrônica para portas corrediças de acesso controlado',
+      unit: 'Conjunto',
+      quantity: doorsSliding.length,
+      unitPriceUSD: 780,
+    });
+  }
+  if (doorsAuto.length > 0) {
+    items.push({
+      id: 'lock-4',
+      category: 'Controle de Acesso',
+      code: 'ACC-MTR-AUTO',
+      name: 'Operador de Porta Automática + Sensor de Presença',
+      description: 'Kit de automação com sensor de presença e liberação via controladora de acesso',
+      unit: 'Conjunto',
+      quantity: doorsAuto.length,
+      unitPriceUSD: 1450,
+    });
+  }
 
-  // 3. Infrastructure & Furniture (Server Racks, Heavy Doors, Turnstiles, Desks, Columns)
-  const racks = sceneObjects.filter(o => o.type === 'column');
+  // 3. Infrastructure & Furniture (Server Racks, Heavy/Sliding/Auto Doors)
+  const racks = sceneObjects.filter(o => o.type === 'rack');
   if (racks.length > 0) {
     items.push({
       id: 'infra-rack',
@@ -107,17 +149,52 @@ export const BOMReport: React.FC = () => {
       unitPriceUSD: 950,
     });
   }
-
   if (doors.length > 0) {
     items.push({
       id: 'infra-door',
       category: 'Infraestrutura & Mobiliário',
-      code: 'INF-DR-SEC',
-      name: 'Porta de Segurança / Automatizada',
-      description: 'Porta reforçada com batente metálico e tubulação embutida para cabeamento',
+      code: 'INF-DR-SIMPLE',
+      name: 'Porta Simples com Batente',
+      description: 'Folha de porta padrão com batente e tubulação embutida para cabeamento',
       unit: 'Unid',
       quantity: doors.length,
-      unitPriceUSD: 650,
+      unitPriceUSD: 320,
+    });
+  }
+  if (doorsHeavy.length > 0) {
+    items.push({
+      id: 'infra-door-heavy',
+      category: 'Infraestrutura & Mobiliário',
+      code: 'INF-DR-HVY',
+      name: 'Porta Pesada Corta-Fogo com Batente Metálico',
+      description: 'Porta reforçada com núcleo metálico, batente de aço e tubulação embutida para cabeamento',
+      unit: 'Unid',
+      quantity: doorsHeavy.length,
+      unitPriceUSD: 1200,
+    });
+  }
+  if (doorsSliding.length > 0) {
+    items.push({
+      id: 'infra-door-sliding',
+      category: 'Infraestrutura & Mobiliário',
+      code: 'INF-DR-SLD',
+      name: 'Conjunto de Porta Corrediça com Trilho Superior',
+      description: 'Folha corrediça sobre trilho aéreo, indicada para áreas de grande fluxo',
+      unit: 'Unid',
+      quantity: doorsSliding.length,
+      unitPriceUSD: 890,
+    });
+  }
+  if (doorsAuto.length > 0) {
+    items.push({
+      id: 'infra-door-auto',
+      category: 'Infraestrutura & Mobiliário',
+      code: 'INF-DR-AUTO',
+      name: 'Porta Automatizada de Acesso',
+      description: 'Folha de porta com operador automático integrado e sensores de segurança',
+      unit: 'Unid',
+      quantity: doorsAuto.length,
+      unitPriceUSD: 1600,
     });
   }
 
@@ -243,7 +320,7 @@ export const BOMReport: React.FC = () => {
           <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
             <span className="text-xs text-gray-500 font-medium">Pontos de Controle de Acesso</span>
             <div className="text-2xl font-bold text-gray-900 mt-1">{readers.length} Leitoras</div>
-            <div className="text-xs text-blue-600 mt-1 font-medium">{doors.length} Portas Controladas</div>
+            <div className="text-xs text-blue-600 mt-1 font-medium">{allDoors.length} Portas Controladas</div>
           </div>
           <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
             <span className="text-xs text-gray-500 font-medium">Armazenamento Estimado</span>

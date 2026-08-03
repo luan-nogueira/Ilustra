@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useProjectStore } from '../../store/useProjectStore';
+import { CameraFeedCanvas } from './CameraFeedCanvas';
 
 interface Props {
   isOpen: boolean;
@@ -86,17 +87,16 @@ export const CameraGridModal: React.FC<Props> = ({ isOpen, onClose }) => {
               </button>
             </div>
             
-            {/* Simulated Live Stream Feed Canvas/Video Simulation */}
-            <div className="flex-1 relative flex items-center justify-center bg-gradient-to-b from-gray-900 via-slate-900 to-black overflow-hidden">
-              <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px]" />
-              <div className="text-center space-y-3 z-0">
-                <div className="w-20 h-20 mx-auto rounded-full bg-sky-500/10 border border-sky-500/30 flex items-center justify-center">
-                  <svg className="w-10 h-10 text-sky-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                  </svg>
-                </div>
-                <div className="font-mono text-sm text-sky-300">STREAM HD H.265 • 30 FPS • 4.2 Mbps</div>
-                <div className="text-xs text-gray-500 font-mono">Posição X:{selectedCamForFS.position[0].toFixed(1)}m | Y:{selectedCamForFS.position[2].toFixed(1)}m | Altura:{selectedCamForFS.position[1]}m</div>
+            {/* Live 3D point-of-view feed, rendered from this camera's real position/height/tilt/FOV */}
+            <div className="flex-1 relative bg-black overflow-hidden">
+              <CameraFeedCanvas camObj={selectedCamForFS} />
+              <div className="absolute inset-x-0 top-10 flex justify-center pointer-events-none">
+                <span className="font-mono text-xs text-sky-300 bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
+                  STREAM HD H.265 • 30 FPS • 4.2 Mbps
+                </span>
+              </div>
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-xs text-gray-400 font-mono bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm pointer-events-none">
+                Posição X:{selectedCamForFS.position[0].toFixed(1)}m | Y:{selectedCamForFS.position[2].toFixed(1)}m | Altura:{selectedCamForFS.position[1].toFixed(1)}m | Tilt:{selectedCamForFS.tilt ?? 15}°
               </div>
             </div>
           </div>
@@ -120,22 +120,15 @@ export const CameraGridModal: React.FC<Props> = ({ isOpen, onClose }) => {
                       </span>
                     </div>
 
-                    {/* Stream Content Simulation */}
+                    {/* Live 3D point-of-view feed for this camera tile */}
                     <div
                       onClick={() => setFullscreenCamId(cam.id)}
-                      className="flex-1 cursor-pointer relative flex items-center justify-center bg-gradient-to-br from-slate-900 to-black group-hover:from-slate-800 group-hover:to-gray-900 transition-colors"
+                      className="flex-1 cursor-pointer relative overflow-hidden bg-black"
                     >
-                      <div className="text-center p-2">
-                        <div className="w-10 h-10 mx-auto mb-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                          <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                          </svg>
-                        </div>
-                        <span className="text-[11px] font-mono text-gray-400">CAM-{idx + 1} ONLINE</span>
-                      </div>
+                      <CameraFeedCanvas camObj={cam} />
 
                       {/* Click to expand hover hint */}
-                      <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                         <span className="text-xs font-semibold bg-sky-600 text-white px-3 py-1 rounded-md shadow-md">
                           Expandir Câmera
                         </span>

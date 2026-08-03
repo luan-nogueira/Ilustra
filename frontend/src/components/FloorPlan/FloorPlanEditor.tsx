@@ -3,6 +3,7 @@ import { useProjectStore, WallSegment, SceneObject } from '../../store/useProjec
 import { StorageCalculator } from '../Calculator/StorageCalculator';
 import { calculateDORIZones, calculateFOV } from '../../utils/cameraMath';
 import { exportProjectToPDF } from '../../utils/exportPdf';
+import { generatePlate } from '../../utils/plateGen';
 import { CAMERA_CATALOG } from '../Dashboard/CatalogModal';
 import { v4 as uuidv4 } from 'uuid';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -20,11 +21,14 @@ const FURNITURE_SIZES: Record<string, [number, number]> = {
   column: [0.6, 0.6], bed: [1.6, 2.0], sofa: [2.0, 0.9],
   chair: [0.6, 0.6],  table: [1.4, 0.7], person: [0.5, 0.5], car: [4.5, 1.8],
   reader: [0.2, 0.1], controller: [0.5, 0.3], door: [0.9, 0.15],
+  rack: [0.6, 0.9], door_heavy: [1.2, 0.25], door_sliding: [1.6, 0.12], door_auto: [1.6, 0.2],
 };
 const FURNITURE_LABELS: Record<string, string> = {
   column: 'Coluna', bed: 'Cama', sofa: 'Sofá', chair: 'Cadeira', table: 'Mesa', person: 'Pessoa', car: 'Carro',
   reader: 'Leitora', controller: 'Controladora', door: 'Porta',
+  rack: 'Rack 19"', door_heavy: 'Porta Pesada', door_sliding: 'Porta Corrediça', door_auto: 'Porta Automatizada',
 };
+const DOOR_TYPES = new Set(['door', 'door_heavy', 'door_sliding', 'door_auto']);
 const CAM_COLORS: Record<string, string> = {
   'Illustra Pro 4MP':    '#0ea5e9',
   'Illustra Pro 8MP 4K': '#f59e0b',
@@ -414,17 +418,54 @@ function drawFurniture(
 
   ctx.save();
   ctx.translate(p.x, p.y); ctx.rotate(obj.rotation[1]);
-  
-  if (obj.type === 'door') {
-    // Draw an architectural door (line + arc)
-    ctx.strokeStyle = obj.color ?? '#78350f';
-    ctx.lineWidth = 2;
-    // Door panel (line)
+
+  if (DOOR_TYPES.has(obj.type)) {
+    // Door leaf + swing arc, styled per sub-type
+    const doorColor = obj.type === 'door_heavy' ? '#334155'
+      : obj.type === 'door_sliding' ? '#0e7490'
+      : obj.type === 'door_auto' ? '#7c3aed'
+      : (obj.color ?? '#78350f');
+    ctx.strokeStyle = doorColor;
+    ctx.lineWidth = obj.type === 'door_heavy' ? 4 : 2;
     ctx.beginPath(); ctx.moveTo(-w/2, 0); ctx.lineTo(-w/2, -w); ctx.stroke();
-    // Arc swing
-    ctx.beginPath(); ctx.arc(-w/2, 0, w, 1.5*Math.PI, 2*Math.PI);
-    ctx.strokeStyle = 'rgba(120,53,15,0.3)'; ctx.setLineDash([2, 2]); ctx.stroke();
-    ctx.setLineDash([]);
+
+    if (obj.type === 'door_sliding') {
+      // Overhead rail + door panel offset to the side (parked open along the rail)
+      ctx.strokeStyle = doorColor; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-w/2, 3); ctx.lineTo(w/2, 3); ctx.stroke();
+      ctx.fillStyle = doorColor + '55';
+      ctx.fillRect(-w/2 - 2, -1.5, w * 0.6, 3);
+    } else if (obj.type === 'door_auto') {
+      // Motor/sensor housing above the opening
+      ctx.fillStyle = doorColor;
+      ctx.fillRect(-w/2 - 2, 4, w + 4, 4);
+      ctx.beginPath(); ctx.arc(0, 6, 2, 0, Math.PI * 2); ctx.fillStyle = '#22c55e'; ctx.fill();
+      ctx.strokeStyle = 'rgba(124,58,237,0.3)'; ctx.setLineDash([2, 2]);
+      ctx.beginPath(); ctx.arc(-w/2, 0, w, 1.5*Math.PI, 2*Math.PI); ctx.stroke();
+      ctx.setLineDash([]);
+    } else {
+      ctx.beginPath(); ctx.arc(-w/2, 0, w, 1.5*Math.PI, 2*Math.PI);
+      ctx.strokeStyle = doorColor + '4d'; ctx.setLineDash([2, 2]); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  } else if (obj.type === 'rack') {
+    // 19" server rack cabinet – dark box with U-slot rungs
+    ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
+    ctx.fillStyle = selected ? '#1e40af' : '#111827';
+    ctx.strokeStyle = selected ? '#2563eb' : '#374151';
+    ctx.lineWidth = selected ? 1.5 : 1;
+    ctx.beginPath(); ctx.roundRect(-w/2, -h/2, w, h, 2); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    if (zoom > 0.5) {
+      ctx.strokeStyle = 'rgba(148,163,184,0.5)'; ctx.lineWidth = 0.6;
+      const rungs = 6;
+      for (let i = 1; i < rungs; i++) {
+        const ry = -h/2 + (h / rungs) * i;
+        ctx.beginPath(); ctx.moveTo(-w/2 + 2, ry); ctx.lineTo(w/2 - 2, ry); ctx.stroke();
+      }
+    }
+    ctx.fillStyle = '#22c55e';
+    ctx.beginPath(); ctx.arc(w/2 - 3, -h/2 + 3, 1.2, 0, Math.PI * 2); ctx.fill();
   } else {
     ctx.shadowColor = 'rgba(0,0,0,0.12)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
     ctx.fillStyle = selected ? '#bfdbfe' : (obj.color ?? '#e2e8f0');
@@ -438,12 +479,64 @@ function drawFurniture(
     if (obj.type === 'chair' && zoom > 0.6) { ctx.beginPath(); ctx.arc(0, 0, Math.min(w,h)/3, 0, Math.PI*2); ctx.stroke(); }
   }
 
-  if (selected && zoom > 0.7 && obj.type !== 'door') {
+  if (selected && zoom > 0.7 && !DOOR_TYPES.has(obj.type)) {
     ctx.font = 'bold 9px Inter,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#1e3a5f';
+    ctx.fillStyle = obj.type === 'rack' ? '#93c5fd' : '#1e3a5f';
     ctx.fillText(FURNITURE_LABELS[obj.type] ?? obj.type, 0, 0);
   }
   ctx.restore();
+}
+
+/** Draw a car with license-plate readout and an LPR "plate read" indicator ring */
+function drawCar(
+  ctx: CanvasRenderingContext2D,
+  obj: SceneObject,
+  selected: boolean,
+  isPlateRead: boolean,
+  pan:{x:number;y:number}, zoom:number, W:number, H:number,
+) {
+  const p = toCanvas(obj.position[0], obj.position[2], pan, zoom, W, H);
+  const [bw, bh] = FURNITURE_SIZES['car'] ?? [4.5, 1.8];
+  const w = bw * obj.scale[0] * getPPM() * zoom;
+  const h = bh * obj.scale[2] * getPPM() * zoom;
+
+  ctx.save();
+  ctx.translate(p.x, p.y); ctx.rotate(obj.rotation[1]);
+
+  ctx.shadowColor = 'rgba(0,0,0,0.12)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
+  ctx.fillStyle = selected ? '#bfdbfe' : (obj.color ?? '#94a3b8');
+  ctx.strokeStyle = isPlateRead ? '#22c55e' : (selected ? '#2563eb' : '#64748b');
+  ctx.lineWidth = isPlateRead ? 2.5 : (selected ? 1.5 : 1);
+  ctx.beginPath(); ctx.roundRect(-w/2, -h/2, w, h, Math.min(6, h/3)); ctx.fill(); ctx.stroke();
+  ctx.shadowBlur = 0;
+  // Windshield hint
+  ctx.fillStyle = 'rgba(15,23,42,0.35)';
+  ctx.fillRect(-w*0.15, -h/2 + 2, w*0.3, h - 4);
+
+  if (isPlateRead && zoom > 0.4) {
+    ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#052e16';
+    const plateW = Math.min(w * 0.5, 34), plateH = 9;
+    ctx.fillStyle = '#f8fafc'; ctx.fillRect(-plateW/2, h/2 - plateH - 2, plateW, plateH);
+    ctx.strokeStyle = '#052e16'; ctx.lineWidth = 0.6; ctx.strokeRect(-plateW/2, h/2 - plateH - 2, plateW, plateH);
+    ctx.fillStyle = '#052e16';
+    ctx.fillText(obj.plate ?? '---', 0, h/2 - plateH/2 - 2);
+  }
+
+  ctx.restore();
+
+  if (isPlateRead && zoom > 0.4) {
+    ctx.save();
+    ctx.font = 'bold 9px Inter,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillStyle = '#052e16';
+    const label = `LPR ✓ ${obj.plate ?? ''}`;
+    const tw = ctx.measureText(label).width;
+    ctx.fillStyle = '#bbf7d0';
+    ctx.beginPath(); ctx.roundRect(p.x - tw/2 - 5, p.y + h/2 + 4, tw + 10, 16, 4); ctx.fill();
+    ctx.fillStyle = '#166534';
+    ctx.fillText(label, p.x, p.y + h/2 + 7);
+    ctx.restore();
+  }
 }
 
 /** Draw a person with a visibility indicator ring */
@@ -906,8 +999,8 @@ const FloorPlanEditor: React.FC = () => {
 
   // ── Precompute visibility polygons (wall-clipped FOV) for all cameras ────────
   const visPolygons = useMemo(() => {
-    const doorWalls: WallSegment[] = furniture.filter(f => f.type === 'door').map(d => {
-      const [bw] = FURNITURE_SIZES['door'] ?? [0.9, 0.15];
+    const doorWalls: WallSegment[] = furniture.filter(f => DOOR_TYPES.has(f.type)).map(d => {
+      const [bw] = FURNITURE_SIZES[d.type] ?? [0.9, 0.15];
       const w = bw * d.scale[0];
       const r = d.rotation[1];
       const dx = Math.cos(r) * (w / 2);
@@ -931,6 +1024,33 @@ const FloorPlanEditor: React.FC = () => {
       allWalls,
     ));
   }, [cameras, walls, furniture]);
+
+  // ── LPR (license-plate legibility) polygons – identify-zone only, LPR-capable cams ──
+  const lprCameras = useMemo(() => cameras.filter(c => (c.model ?? '').toUpperCase().includes('LPR')), [cameras]);
+  const lprPolygons = useMemo(() => {
+    const doorWalls: WallSegment[] = furniture.filter(f => DOOR_TYPES.has(f.type)).map(d => {
+      const [bw] = FURNITURE_SIZES[d.type] ?? [0.9, 0.15];
+      const w = bw * d.scale[0];
+      const r = d.rotation[1];
+      const dx = Math.cos(r) * (w / 2);
+      const dy = Math.sin(r) * (w / 2);
+      return { id: 'door_' + d.id, x1: d.position[0]-dx, y1: d.position[2]-dy, x2: d.position[0]+dx, y2: d.position[2]+dy, thickness:0.1, height:2.1, color:'#000' };
+    });
+    const allWalls = [...walls, ...doorWalls];
+    return lprCameras.map(cam => {
+      const f = cam.focalLength ?? 2.8;
+      const sw = cam.sensorWidth ?? 5.27;
+      const rw = parseInt((cam.resolution ?? '1920x1080').split('x')[0]) || 1920;
+      const identifyRange = Math.min(cam.range ?? 30, calculateDORIZones(rw, f, sw).identify);
+      return computeVisibilityPoly(
+        cam.position[0], cam.position[2],
+        r1ToCanvas(cam.rotation[1]),
+        (cam.fov ?? 55) / 2 * Math.PI / 180,
+        identifyRange,
+        allWalls,
+      );
+    });
+  }, [lprCameras, walls, furniture]);
 
   // ── Coverage % (accurate, uses visibility polygons) ──────────────────────────
   const coveragePct = useMemo(() => {
@@ -1086,8 +1206,8 @@ const FloorPlanEditor: React.FC = () => {
     }
 
     // ── Furniture ────────────────────────────────────────────────────────────
-    // ── Furniture (non-person) ───────────────────────────────────────────────
-    for (const obj of furniture.filter(o => o.type !== 'person')) {
+    // ── Furniture (non-person, non-car) ──────────────────────────────────────
+    for (const obj of furniture.filter(o => o.type !== 'person' && o.type !== 'car')) {
       drawFurniture(ctx, obj, obj.id === selectedSceneObjectId, pan, zoom, W, H);
     }
 
@@ -1095,6 +1215,12 @@ const FloorPlanEditor: React.FC = () => {
     for (const obj of furniture.filter(o => o.type === 'person')) {
       const isDetected = visPolygons.some(poly => pointInPoly(obj.position[0], obj.position[2], poly));
       drawPerson(ctx, obj, obj.id === selectedSceneObjectId, isDetected, pan, zoom, W, H);
+    }
+
+    // ── Cars with LPR plate-read indicator ───────────────────────────────────
+    for (const obj of furniture.filter(o => o.type === 'car')) {
+      const isPlateRead = lprPolygons.some(poly => pointInPoly(obj.position[0], obj.position[2], poly));
+      drawCar(ctx, obj, obj.id === selectedSceneObjectId, isPlateRead, pan, zoom, W, H);
     }
 
     // ── Cameras ──────────────────────────────────────────────────────────────
@@ -1142,7 +1268,7 @@ const FloorPlanEditor: React.FC = () => {
     ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     ctx.fillText('5m', sbX + scaleW/2, sbY+2);
   }, [walls, sceneObjects, pan, zoom, canvasSize, wallStart, mouseWorld, tool, wallThickness,
-      selectedWallId, selectedSceneObjectId, hoveredWallId, showBlinds, showHeatmap, visPolygons, cameras, furniture, viewMode]);
+      selectedWallId, selectedSceneObjectId, hoveredWallId, showBlinds, showHeatmap, visPolygons, lprPolygons, cameras, furniture, viewMode]);
 
   // ── Hit tests ─────────────────────────────────────────────────────────────────
   const hitWall = useCallback((wx:number, wy:number): string|null => {
@@ -1368,10 +1494,11 @@ const FloorPlanEditor: React.FC = () => {
       color: CAM_COLORS[model.model] ?? '#0ea5e9',
       focalLength: 2.8,
       sensorWidth: 5.27, // 1/2.8" sensor width in mm
-      resolution: "2MP",
+      resolution: /^\d+x\d+$/.test(model.resolution as any) ? model.resolution : "1920x1080",
       fov: model.doriAngle,
       range: Math.max(5, Math.round(model.doriRadius / 12)),
       model: model.model,
+      tilt: model.model.toUpperCase().includes('LPR') ? 8 : 15,
     } as any);
     setShowCamPicker(false); setPendingPos(null); setTool('select');
   };
@@ -1383,17 +1510,23 @@ const FloorPlanEditor: React.FC = () => {
     { type:'sofa',   icon:'🛋️', label:'Sofá',   color:'#fce7e7' },
     { type:'bed',    icon:'🛏️', label:'Cama',   color:'#dbeafe' },
     { type:'column', icon:'⬤',  label:'Coluna', color:'#e5e7eb' },
+    { type:'rack',   icon:'🗄️', label:'Rack 19"', color:'#111827' },
     { type:'person', icon:'🧍', label:'Pessoa', color:'#ffb6c1' },
     { type:'car',    icon:'🚗', label:'Carro',  color:'#94a3b8' },
     { type:'reader', icon:'🪪', label:'Leitora', color:'#10b981' },
     { type:'controller', icon:'🎛️', label:'Controladora', color:'#f59e0b' },
+    { type:'door',        icon:'🚪', label:'Porta Simples',  color:'#78350f' },
+    { type:'door_heavy',  icon:'🛡️', label:'Porta Pesada',   color:'#334155' },
+    { type:'door_sliding',icon:'↔️', label:'Porta Corrediça', color:'#0e7490' },
+    { type:'door_auto',   icon:'⚙️', label:'Porta Automática', color:'#7c3aed' },
   ];
   const addFurniture = (type: string, color: string) => {
     if (!pendingPos) return;
     let yHeight = 0;
     if (type === 'reader') yHeight = 1.2;
     if (type === 'controller') yHeight = 1.8;
-    addSceneObject({ id:uuidv4(), type:type as any, position:[pendingPos.x, yHeight, pendingPos.y], rotation:[0, pendingPos.r || 0, 0], scale:[1,1,1], color });
+    const extra = type === 'car' ? { plate: generatePlate() } : {};
+    addSceneObject({ id:uuidv4(), type:type as any, position:[pendingPos.x, yHeight, pendingPos.y], rotation:[0, pendingPos.r || 0, 0], scale:[1,1,1], color, ...extra });
     setShowFurnPicker(false); setPendingPos(null); setTool('select');
   };
 
@@ -2101,6 +2234,21 @@ const FloorPlanEditor: React.FC = () => {
             
             <div style={{ height:1, background:'#334155', margin:'16px 0' }} />
 
+            <div style={S.lbl}><span>Altura de Instalação</span><span style={S.val}>{selectedObj.position[1].toFixed(2)}m</span></div>
+            <input type="range" min={1.5} max={8} step={0.1} value={selectedObj.position[1]}
+              onChange={e => updateSceneObject(selectedObj.id, { position: [selectedObj.position[0], Number(e.target.value), selectedObj.position[2]] })}
+              style={{ ...S.slider, marginBottom:14 }} />
+
+            <div style={S.lbl}>
+              <span>Inclinação (Tilt)</span>
+              <span style={S.val}>{selectedObj.tilt ?? 15}° {(selectedObj.tilt ?? 15) === 0 ? '(Horizontal)' : (selectedObj.tilt ?? 15) >= 80 ? '(Nadir)' : ''}</span>
+            </div>
+            <input type="range" min={-10} max={90} step={1} value={selectedObj.tilt ?? 15}
+              onChange={e => updateSceneObject(selectedObj.id, { tilt: Number(e.target.value) })}
+              style={{ ...S.slider, marginBottom:14 }} />
+
+            <div style={{ height:1, background:'#334155', margin:'16px 0' }} />
+
             <div style={S.lbl}><span>Alcance Simulado na Planta (Raio)</span><span style={S.val}>{selectedObj.range??10}m</span></div>
             <input type="range" min={2} max={100} step={1} value={selectedObj.range??10}
               onChange={e => updateSceneObject(selectedObj.id,{range:Number(e.target.value)})}
@@ -2232,6 +2380,30 @@ const FloorPlanEditor: React.FC = () => {
                   style={{ ...S.slider, marginBottom:16 }} />
               </>
             )}
+
+            {selectedObj.type === 'car' && (() => {
+              const isPlateRead = lprPolygons.some(poly => pointInPoly(selectedObj.position[0], selectedObj.position[2], poly));
+              return (
+                <div style={{ background:'#0f172a', borderRadius:8, padding:'10px 12px', border:'1px solid #1e293b', marginBottom:14 }}>
+                  <div style={{ fontSize:10, color:'#94a3b8', fontWeight:600, textTransform:'uppercase', marginBottom:8 }}>Reconhecimento de Placa (LPR)</div>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                    <span style={{ fontFamily:'monospace', fontSize:16, fontWeight:700, color:'#f1f5f9', background:'#1e293b', padding:'4px 10px', borderRadius:6, border:'1px solid #334155' }}>
+                      {selectedObj.plate ?? '---'}
+                    </span>
+                    <span style={{ fontSize:11, fontWeight:700, color: isPlateRead ? '#22c55e' : '#64748b' }}>
+                      {lprCameras.length === 0 ? 'Sem câmera LPR no projeto' : isPlateRead ? '✓ Placa Lida' : '✗ Fora de Alcance'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => updateSceneObject(selectedObj.id, { plate: generatePlate() })}
+                    style={{ width:'100%', padding:'7px 0', borderRadius:8, background:'#1e293b', color:'#94a3b8', border:'1px solid #334155', cursor:'pointer', fontSize:11, fontWeight:600 }}
+                  >
+                    Gerar Nova Placa
+                  </button>
+                </div>
+              );
+            })()}
+
             <button onClick={() => { removeSceneObject(selectedObj.id); setSelectedSceneObjectId(null); }} style={S.removeBtn}>
               {selectedObj.type === 'person' ? 'Remover Pessoa' : 'Remover Móvel'}
             </button>
