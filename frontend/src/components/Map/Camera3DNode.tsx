@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import * as THREE from 'three';
 import { Line } from '@react-three/drei';
 
@@ -13,7 +13,10 @@ export const Camera3DNode: React.FC<Camera3DNodeProps> = ({
   fov = 75,
   range = 8,
 }) => {
-  const halfFovRad = THREE.MathUtils.degToRad(fov / 2);
+  // Clamp to a safe optical range – values >=180° can't be represented by a
+  // cone (tan() blows up/goes negative past 90° half-angle) so we cap well below that.
+  const safeFov = Math.min(Math.max(fov, 1), 170);
+  const halfFovRad = THREE.MathUtils.degToRad(safeFov / 2);
   const baseRadius = Math.tan(halfFovRad) * range;
 
   // Build the outline lines of the cone in -Z direction

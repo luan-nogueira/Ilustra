@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useProjectStore } from '../../store/useProjectStore';
 
 interface SidebarItem {
@@ -56,7 +56,7 @@ const Sidebar = () => {
             </svg>
           </div>
           <div>
-            <div className="text-white font-bold text-[15px] tracking-tight leading-none">Illustra</div>
+            <div className="text-white font-bold text-[15px] tracking-tight leading-none">TYCON</div>
             <div className="text-blue-300 text-[9px] font-medium tracking-widest uppercase leading-none mt-0.5">Design Studio</div>
           </div>
         </div>
@@ -108,7 +108,7 @@ const Sidebar = () => {
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-white text-xs font-medium truncate">Luan Nogueira</div>
-            <div className="text-blue-300/60 text-[10px] truncate">Illustra Design Studio</div>
+            <div className="text-blue-300/60 text-[10px] truncate">TYCON Design Studio</div>
           </div>
           <button className="text-blue-300/40 hover:text-blue-200 transition-colors">
             <Icon name="settings" />

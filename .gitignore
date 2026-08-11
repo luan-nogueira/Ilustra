@@ -20,3 +20,8 @@ build/
 
 # Temporary files
 *.log
+
+# TypeScript incremental build cache / stray emitted config artifacts
+*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts

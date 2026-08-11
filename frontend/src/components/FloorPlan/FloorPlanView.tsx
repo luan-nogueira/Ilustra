@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { useProjectStore, type CameraDevice } from '../../store/useProjectStore';
+import { useProjectStore } from '../../store/useProjectStore';
 import FloorPlan3D from '../Map/FloorPlan3D';
 import { Editor3DPanel } from '../Map/Editor3DPanel';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -77,7 +77,7 @@ const drawFloorPlan = (
 
           let angle = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
           angle = ((angle % 360) + 360) % 360;
-          let camRot = ((cam.rotation % 360) + 360) % 360;
+          const camRot = ((cam.rotation % 360) + 360) % 360;
           let diff = Math.abs(angle - camRot);
           if (diff > 180) diff = 360 - diff;
 
@@ -150,7 +150,7 @@ const calcCoverage = (cameras: CanvasCamera[], width: number, height: number): n
         if (dist > cam.doriRadius) continue;
         let angle = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
         angle = ((angle % 360) + 360) % 360;
-        let camRot = ((cam.rotation % 360) + 360) % 360;
+        const camRot = ((cam.rotation % 360) + 360) % 360;
         let diff = Math.abs(angle - camRot);
         if (diff > 180) diff = 360 - diff;
         if (diff <= cam.doriAngle / 2) { covered++; break; }
@@ -251,28 +251,8 @@ const FloorPlanView = () => {
       setIsConverting(false);
     } 
     else if (fileName.endsWith('.dwg')) {
-      setIsConverting(true);
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-        const res = await fetch('http://localhost:8000/api/v1/convert-dwg', {
-          method: 'POST',
-          body: formData,
-        });
-        if (!res.ok) throw new Error('Erro na conversão no servidor backend');
-        const data = await res.json();
-        
-        // Carrega a imagem antes de setar para garantir que o link funciona
-        const img = new Image();
-        img.onload = () => setFloorPlanImage(data.url);
-        img.onerror = () => alert("Erro ao carregar a imagem convertida");
-        img.src = data.url;
-      } catch (err) {
-        console.error("Erro ao converter DWG:", err);
-        alert("Erro ao converter DWG. Certifique-se de que o backend (porta 8000) está rodando e configurado com a API Key.");
-      }
-      setIsConverting(false);
-    } 
+      alert("Importação de arquivos .DWG não está disponível nesta versão do site. Exporte sua planta do AutoCAD/similar como PDF, PNG ou JPG e importe novamente aqui.");
+    }
     else if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => setFloorPlanImage(e.target?.result as string);

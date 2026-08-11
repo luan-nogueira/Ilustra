@@ -132,7 +132,7 @@
     "resolution": "1920x1080",
     "fps": 60,
     "compression": "H.264, H.265, MJPEG",
-    "fov": 700,
+    "fov": 60,
     "range": 135
   },
   {
@@ -156,7 +156,7 @@
     "resolution": "1920x1080",
     "fps": 60,
     "compression": "H.264, H.265, MJPEG",
-    "fov": 700,
+    "fov": 60,
     "range": 200
   },
   {
@@ -166,13 +166,5 @@
     "compression": "H.264, H.265, MJPEG",
     "fov": 90,
     "range": 20
-  },
-  {
-    "model": "Illustra Product Guide",
-    "resolution": "1920x1080",
-    "fps": 4,
-    "compression": "H.265, H.264",
-    "fov": 360,
-    "range": 22
   }
 ]

@@ -4,6 +4,7 @@ import { OrbitControls, Grid, Environment, Text, Billboard } from '@react-three/
 import * as THREE from 'three';
 import { useProjectStore, WallSegment, SceneObject } from '../../store/useProjectStore';
 import { calculateDORIZones } from '../../utils/cameraMath';
+import { createPlateTexture } from '../../utils/plateTexture';
 
 // ── Furniture dimensions [w, h, d] in meters ─────────────────────────────────
 const FURN_DIMS: Record<string, [number, number, number]> = {
@@ -24,21 +25,6 @@ const FURN_DIMS: Record<string, [number, number, number]> = {
 };
 
 const DOOR_TYPES_3D = new Set(['door', 'door_heavy', 'door_sliding', 'door_auto']);
-
-function createPlateTexture(text: string): THREE.CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256; canvas.height = 64;
-  const ctx = canvas.getContext('2d')!;
-  ctx.fillStyle = '#f8fafc'; ctx.fillRect(0, 0, 256, 64);
-  ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 5; ctx.strokeRect(4, 4, 248, 56);
-  ctx.fillStyle = '#0f172a';
-  ctx.font = 'bold 34px monospace';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(text || '---', 128, 34);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.needsUpdate = true;
-  return tex;
-}
 
 // ── Ray casting – Visibility Polygon ────────────────────────────────────────
 
@@ -398,11 +384,11 @@ const Furniture3D: React.FC<{ obj: SceneObject; plateRead?: boolean } & FloorPla
             </mesh>
           ))}
           {/* License plates – procedurally generated texture (no third-party assets) */}
-          <mesh position={[carW / 2 + 0.01, -carH * 0.3, 0]}>
+          <mesh position={[carW / 2 + 0.01, -carH * 0.3, 0]} rotation={[0, Math.PI / 2, 0]}>
             <planeGeometry args={[0.4, 0.15]} />
             <meshStandardMaterial map={plateTex} />
           </mesh>
-          <mesh position={[-carW / 2 - 0.01, -carH * 0.3, 0]} rotation={[0, Math.PI, 0]}>
+          <mesh position={[-carW / 2 - 0.01, -carH * 0.3, 0]} rotation={[0, -Math.PI / 2, 0]}>
             <planeGeometry args={[0.4, 0.15]} />
             <meshStandardMaterial map={plateTex} />
           </mesh>
@@ -446,7 +432,7 @@ const Camera3D: React.FC<{ obj: SceneObject; walls: WallSegment[] } & FloorPlan3
   const selected = selectedSceneObjectId === obj.id;
   const groupRef = React.useRef<THREE.Group>(null);
   
-  const fov    = obj.fov ?? 75;
+  const fov    = Math.min(Math.max(obj.fov ?? 75, 1), 360);
   const range  = obj.range ?? 10;
   const color  = obj.color ?? '#0ea5e9';
   const halfFov = THREE.MathUtils.degToRad(fov / 2);

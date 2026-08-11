@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useProjectStore, SceneObject, WallSegment } from '../../store/useProjectStore';
+import { createPlateTexture } from '../../utils/plateTexture';
 
 // Lightweight, non-interactive scene renderer used for the multi-camera "VMS" grid —
 // each tile gets its own tiny live 3D viewport rendered from that camera's real
@@ -46,7 +47,36 @@ const SimpleWall: React.FC<{ wall: WallSegment }> = ({ wall }) => {
   );
 };
 
+const SimpleCar: React.FC<{ obj: SceneObject }> = ({ obj }) => {
+  const [carW, carH, carD] = FURN_DIMS.car;
+  const plateTex = useMemo(() => createPlateTexture(obj.plate ?? '---'), [obj.plate]);
+  return (
+    <group position={[obj.position[0], obj.position[1], obj.position[2]]} rotation={[0, obj.rotation[1], 0]}>
+      <group position={[0, carH / 2 + 0.28, 0]}>
+        <mesh position={[0, -carH * 0.25, 0]}>
+          <boxGeometry args={[carW, carH * 0.4, carD]} />
+          <meshStandardMaterial color={obj.color ?? '#334155'} roughness={0.3} metalness={0.6} />
+        </mesh>
+        <mesh position={[-carW * 0.1, carH * 0.15, 0]}>
+          <boxGeometry args={[carW * 0.5, carH * 0.4, carD * 0.9]} />
+          <meshStandardMaterial color={obj.color ?? '#334155'} roughness={0.3} metalness={0.6} />
+        </mesh>
+        {/* License plates – same procedural texture/orientation as the main floor-plan view */}
+        <mesh position={[carW / 2 + 0.01, -carH * 0.3, 0]} rotation={[0, Math.PI / 2, 0]}>
+          <planeGeometry args={[0.4, 0.15]} />
+          <meshStandardMaterial map={plateTex} />
+        </mesh>
+        <mesh position={[-carW / 2 - 0.01, -carH * 0.3, 0]} rotation={[0, -Math.PI / 2, 0]}>
+          <planeGeometry args={[0.4, 0.15]} />
+          <meshStandardMaterial map={plateTex} />
+        </mesh>
+      </group>
+    </group>
+  );
+};
+
 const SimpleFurniture: React.FC<{ obj: SceneObject }> = ({ obj }) => {
+  if (obj.type === 'car') return <SimpleCar obj={obj} />;
   const [w, h, d] = FURN_DIMS[obj.type] ?? [1, 0.8, 1];
   return (
     <mesh

@@ -1,15 +1,21 @@
-import React from 'react';
+import { lazy, Suspense } from 'react';
 import DashboardLayout from './components/Layout/DashboardLayout';
 import CanvasMap from './components/Map/CanvasMap';
 import StatsBar from './components/Dashboard/StatsBar';
 import ScenariosPanel from './components/Dashboard/ScenariosPanel';
 import DevicesPanel from './components/Dashboard/DevicesPanel';
 import CatalogModal from './components/Dashboard/CatalogModal';
-import FloorPlanEditor from './components/FloorPlan/FloorPlanEditor';
 import { AIConsultantChat } from './components/AI/AIConsultantChat';
 import { useProjectStore } from './store/useProjectStore';
 
-import { BOMReport } from './components/Reports/BOMReport';
+// Code-split: essas telas dependem de Three.js/jsPDF/html2canvas (pesados) e só
+// são necessárias quando o usuário efetivamente abre a aba correspondente.
+const FloorPlanEditor = lazy(() => import('./components/FloorPlan/FloorPlanEditor'));
+const BOMReport = lazy(() => import('./components/Reports/BOMReport').then(m => ({ default: m.BOMReport })));
+
+const TabLoading = () => (
+  <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Carregando…</div>
+);
 
 const PLACEHOLDER_PAGES: Record<string, { title: string; description: string }> = {
   recording: { title: 'Ambientes', description: 'Defina os ambientes do projeto — salas, fachadas, áreas comuns — e configure as propriedades de cada espaço arquitetônico.' },
@@ -38,10 +44,18 @@ function App() {
       return <DevicesPanel />;
     }
     if (activeTab === 'maps') {
-      return <FloorPlanEditor />;
+      return (
+        <Suspense fallback={<TabLoading />}>
+          <FloorPlanEditor />
+        </Suspense>
+      );
     }
     if (activeTab === 'reports') {
-      return <BOMReport />;
+      return (
+        <Suspense fallback={<TabLoading />}>
+          <BOMReport />
+        </Suspense>
+      );
     }
     const page = PLACEHOLDER_PAGES[activeTab];
     if (page) {

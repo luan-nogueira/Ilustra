@@ -66,7 +66,7 @@ const Topbar = () => {
             className="font-black text-[17px] tracking-tight"
             style={{ color: '#ffffff' }}
           >
-            Illustra
+            TYCON
           </span>
           <span className="text-blue-300/50 text-[13px] font-light tracking-wider">Design</span>
         </div>

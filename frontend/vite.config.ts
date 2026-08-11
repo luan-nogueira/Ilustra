@@ -16,22 +16,28 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024, // bundle inclui three.js/pdfjs, acima do limite padrão de 2MiB
       },
       manifest: {
-        name: 'CCURE Site Designer',
-        short_name: 'SiteDesigner',
-        description: 'Ferramenta de design de projetos para C-CURE 9000',
-        theme_color: '#ffffff',
+        name: 'TYCON Site Designer',
+        short_name: 'TYCON',
+        description: 'Ferramenta de design de projetos de CFTV e controle de acesso (compatível C-CURE 9000)',
+        theme_color: '#0F62FE',
         background_color: '#f9fafb',
         display: 'standalone', // Aqui é a mágica: abre numa janela separada, sem navegador!
         icons: [
           {
-            src: 'https://via.placeholder.com/192x192.png?text=CCURE', // Placeholder rápido
+            src: '/icon.svg',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/svg+xml'
           },
           {
-            src: 'https://via.placeholder.com/512x512.png?text=CCURE',
+            src: '/icon.svg',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/svg+xml'
+          },
+          {
+            src: '/icon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
           }
         ]
       }

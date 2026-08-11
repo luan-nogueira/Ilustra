@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { v4 as uuidv4 } from 'uuid';
+import { generateAIReply } from '../../utils/aiConsultantMock';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -29,18 +30,10 @@ export const AIConsultantChat: React.FC = () => {
     setInput('');
     setIsLoading(true);
 
-    try {
-      const res = await fetch('http://localhost:8000/api/v1/ai-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMsgs })
-      });
-      const data = await res.json();
-      setMessages([...newMsgs, { role: 'assistant', content: data.reply }]);
-    } catch (e) {
-      setMessages([...newMsgs, { role: 'assistant', content: 'Erro ao contatar o servidor da IA.' }]);
-    }
-    
+    // Site estático (GitHub Pages): resposta roteirizada gerada no cliente, sem backend.
+    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 400));
+    const reply = generateAIReply(newMsgs);
+    setMessages([...newMsgs, { role: 'assistant', content: reply }]);
     setIsLoading(false);
   };
 

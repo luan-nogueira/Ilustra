@@ -784,85 +784,8 @@ const FloorPlanEditor: React.FC = () => {
       setIsConverting(false);
     } 
     else if (fileName.endsWith('.dwg')) {
-      setIsConverting(true);
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-        const res = await fetch('http://localhost:8000/api/v1/convert-dwg', {
-          method: 'POST',
-          body: formData,
-        });
-        if (!res.ok) {
-          let errorMsg = 'Erro na conversão no servidor backend';
-          try {
-            const errData = await res.json();
-            if (errData.detail) errorMsg = errData.detail;
-          } catch(e) {}
-          throw new Error(errorMsg);
-        }
-        const data = await res.json();
-        
-        const img = new Image();
-        img.onload = () => {
-          useProjectStore.setState({ walls: [], sceneObjects: [], selectedSceneObjectId: null, selectedWallId: null });
-          setFloorPlanImage(data.url);
-        };
-        img.onerror = () => alert("Erro ao carregar a imagem convertida");
-        img.src = data.url;
-
-        // --- NEW SVG LOGIC ---
-        if (data.svg_content) {
-          try {
-            const doc = new DOMParser().parseFromString(data.svg_content, "image/svg+xml");
-            setSvgDoc(doc);
-            
-            // Melhorando a extração: agrupar por <g id>, <g class>, ou pelo stroke da linha
-            const layersMap = new Map<string, {count: number; color?: string}>();
-            const allPaths = doc.querySelectorAll('line, path, polyline');
-            
-            allPaths.forEach(p => {
-               let parent = p.closest('g[id], g[class]');
-               let layerName = "Camada Padrão";
-               if (parent) {
-                  layerName = parent.getAttribute('id') || parent.getAttribute('class') || layerName;
-               } else {
-                  const stroke = p.getAttribute('stroke');
-                  if (stroke) layerName = `Linhas (Cor ${stroke})`;
-               }
-               
-               const strokeColor = p.getAttribute('stroke') || parent?.getAttribute('stroke') || undefined;
-
-               const existing = layersMap.get(layerName) || { count: 0, color: strokeColor };
-               existing.count += 1;
-               if (!existing.color && strokeColor) existing.color = strokeColor;
-               
-               layersMap.set(layerName, existing);
-            });
-            
-            const layers = Array.from(layersMap.entries()).map(([id, data]) => {
-              // Embelezando o nome da camada
-              let niceName = id;
-              if (niceName.startsWith("Linhas (Cor")) {
-                 niceName = "Camada sem nome";
-              }
-              return { id, name: niceName, count: data.count, color: data.color };
-            });
-            
-            if (layers.length > 0) {
-              setSvgLayers(layers);
-            } else {
-              console.warn("SVG carregado, mas nenhuma linha foi encontrada.");
-            }
-          } catch(e) {
-            console.error("Falha ao ler SVG", e);
-          }
-        }
-      } catch (err: any) {
-        console.error("Erro ao converter DWG:", err);
-        alert(`Erro ao converter DWG:\n${err.message || err}\n\nCertifique-se de que a API Key foi aceita.`);
-      }
-      setIsConverting(false);
-    } 
+      alert("Importação de arquivos .DWG não está disponível nesta versão do site. Exporte sua planta do AutoCAD/similar como PDF, PNG ou JPG e importe novamente aqui.");
+    }
     else if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -882,7 +805,7 @@ const FloorPlanEditor: React.FC = () => {
     // Como a nova lógica agrupa as linhas sem usar apenas <g id>, vamos filtrar todas as linhas de novo
     const allPaths = Array.from(svgDoc.querySelectorAll('line, path, polyline'));
     const targetLines = allPaths.filter(p => {
-       let parent = p.closest('g[id], g[class]');
+       const parent = p.closest('g[id], g[class]');
        let name = "Camada Padrão";
        if (parent) {
           name = parent.getAttribute('id') || parent.getAttribute('class') || name;
@@ -1019,7 +942,7 @@ const FloorPlanEditor: React.FC = () => {
     return cameras.map(cam => computeVisibilityPoly(
       cam.position[0], cam.position[2],
       r1ToCanvas(cam.rotation[1]),
-      (cam.fov ?? 75) / 2 * Math.PI / 180,
+      Math.min(Math.max(cam.fov ?? 75, 1), 360) / 2 * Math.PI / 180,
       cam.range ?? 10,
       allWalls,
     ));
@@ -1045,7 +968,7 @@ const FloorPlanEditor: React.FC = () => {
       return computeVisibilityPoly(
         cam.position[0], cam.position[2],
         r1ToCanvas(cam.rotation[1]),
-        (cam.fov ?? 55) / 2 * Math.PI / 180,
+        Math.min(Math.max(cam.fov ?? 55, 1), 360) / 2 * Math.PI / 180,
         identifyRange,
         allWalls,
       );
@@ -1302,8 +1225,8 @@ const FloorPlanEditor: React.FC = () => {
 
   const hitFurniture = useCallback((wx:number, wy:number): string|null => {
     for (const obj of [...furniture].reverse()) {
-      let [bw, bh] = FURNITURE_SIZES[obj.type] ?? [1,1];
-      if (obj.type === 'door') bh = bw; // Make hitbox square for the door arc
+      const [bw, bhRaw] = FURNITURE_SIZES[obj.type] ?? [1,1];
+      const bh = obj.type === 'door' ? bw : bhRaw; // Make hitbox square for the door arc
       const hw = bw*obj.scale[0]/2+0.12, hh = bh*obj.scale[2]/2+0.12;
       const r = -obj.rotation[1];
       const dx = wx-obj.position[0], dy = wy-obj.position[2];
